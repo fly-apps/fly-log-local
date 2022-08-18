@@ -1,0 +1,25 @@
+[sources.fly_nats]
+  type = "nats"
+  url = "nats://[fdaa::3]:4223"
+  queue = "${QUEUE-}"
+  subject = "${SUBJECT-logs.>}"
+  auth.strategy = "user_password"
+  auth.user_password.user = "${ORG-personal}"
+  auth.user_password.password = "${ACCESS_TOKEN?}"
+  connection_name = "fly-nats"
+  decoding.codec = "json"
+
+[sinks.loki]
+  type = "loki"
+  inputs = [ "fly_nats" ]
+  endpoint = "http://127.0.0.1:3100"
+  compression = "none"
+  remove_label_fields = true
+
+  [sinks.loki.labels]
+  forwarder = "vector"
+  fly_app = "{{ fly.app.name }}"
+  fly_instance = "{{ fly.app.instance }}"
+
+  [sinks.loki.encoding]
+  codec = "text"
